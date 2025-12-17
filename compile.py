@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-import os
+import os, json
 
 from progress import ProgressBar
 from util import run, BUILD_DIR, ROOT
@@ -11,7 +11,10 @@ def pkg_config(lib: str):
     libs = run(["pkg-config", "--libs", lib], silent=True).split()
     return cflags, libs
 
-def compile_one(compiler: str, src: Path, obj: Path, cflags: list[str], state: dict):
+def compile_one(compiler: str, src: Path, obj: Path, cflags: list[str], state: dict, ccdb: list[dict]):
+    cmd = [compiler, "-c", str(src), "-o", str(obj), *cflags]
+    ccdb.append({ "directory": str(ROOT), "file": str(src), "output": str(obj), "arguments": cmd })
+
     deps = scan_deps(compiler, src, cflags)
 
     if not needs_rebuild(src, obj, deps, state):
@@ -19,7 +22,6 @@ def compile_one(compiler: str, src: Path, obj: Path, cflags: list[str], state: d
         return
 
     obj.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [compiler, "-c", str(src), "-o", str(obj), *cflags]
     print(f"[cc] {' '.join(cmd)}")
 
     try:
@@ -33,6 +35,7 @@ def compile_all(sources: list[Path], dest: Path, *, compiler="gcc", libs=[], cfl
     state = load_state()
     objects = []
     errors = []
+    ccdb = []
 
     os.makedirs(dest.parent, exist_ok=True)
 
@@ -61,6 +64,7 @@ def compile_all(sources: list[Path], dest: Path, *, compiler="gcc", libs=[], cfl
                         obj,
                         cflags,
                         state,
+                        ccdb
                     )
                 )
 
@@ -78,6 +82,10 @@ def compile_all(sources: list[Path], dest: Path, *, compiler="gcc", libs=[], cfl
 
         if len(errors) > 0:
             raise Exception(f"Error in {len(errors)} file(s)")
+        
+        Path(ROOT / "compile_commands.json").write_text(
+            json.dumps(ccdb, indent=4)
+        )
 
         # link
         cmd = [compiler, *map(str, objects), "-o", str(dest), *ldflags]
