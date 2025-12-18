@@ -1,7 +1,7 @@
 from pathlib import Path
 import json, hashlib, threading
 
-from util import BUILD_DIR, run, TOOL_DIR, glob
+from .util import BUILD_DIR, run, TOOL_DIR, glob
 
 SCRIPTS = glob(TOOL_DIR, "*.py")
 DEPS_FILE = BUILD_DIR / "deps.json"

@@ -2,9 +2,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import os, json
 
-from progress import ProgressBar
-from util import run, BUILD_DIR, ROOT
-from incremental import scan_deps, save_deps, needs_rebuild, load_state, save_state
+from .progress import ProgressBar
+from .util import run, BUILD_DIR, ROOT
+from .incremental import scan_deps, save_deps, needs_rebuild, load_state, save_state
 
 def pkg_config(lib: str):
     cflags = run(["pkg-config", "--cflags", lib], silent=True).split()
