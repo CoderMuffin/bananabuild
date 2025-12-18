@@ -1,9 +1,9 @@
 from pathlib import Path
 import json, hashlib, threading
 
-from .util import BUILD_DIR, run, TOOL_DIR, glob
+from .util import BUILD_DIR, run, ROOT, glob
 
-SCRIPTS = glob(TOOL_DIR, "*.py")
+SCRIPTS = glob(ROOT, "*.py") # assume all are build files just in case
 DEPS_FILE = BUILD_DIR / "deps.json"
 LOCK = threading.Lock()
 
